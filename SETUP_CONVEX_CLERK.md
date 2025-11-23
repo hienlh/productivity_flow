@@ -12,7 +12,7 @@
 1. Visit https://dashboard.clerk.com/
 2. Sign up (free)
 3. Create a new application
-   - Name: `ProductivityFlow`
+   - Name: `PlanningMind`
    - Enable: **Google OAuth**
 4. Copy your **Publishable Key**:
    ```

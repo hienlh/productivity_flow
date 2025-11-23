@@ -20,9 +20,9 @@ import { Sparkles, BrainCircuit, CalendarClock, LayoutDashboard, History, Upload
 
 // LocalStorage keys
 const STORAGE_KEYS = {
-  TASKS: 'productivityflow_tasks',
-  PLAN: 'productivityflow_plan',
-  HISTORY: 'productivityflow_history',
+  TASKS: 'planningmind_tasks',
+  PLAN: 'planningmind_plan',
+  HISTORY: 'planningmind_history',
 };
 
 // Helper functions for localStorage
@@ -503,7 +503,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-900">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
@@ -514,9 +514,18 @@ export default function App() {
             <h1 className="text-base sm:text-xl font-bold text-slate-800 tracking-tight">{t.header.title}</h1>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
-            <AuthButton />
-            
-            <LanguageSwitcher />
+            <button
+              onClick={() => setIsHistoryModalOpen(true)}
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors relative"
+            >
+              <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">{t.header.history}</span>
+              {history.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-indigo-600 text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center">
+                  {history.length}
+                </span>
+              )}
+            </button>
             
             <button
               onClick={() => setShowApiKeySetup(true)}
@@ -532,27 +541,15 @@ export default function App() {
               {!apiKey && <span className="sm:hidden">!</span>}
             </button>
             
-            <button
-              onClick={() => setIsHistoryModalOpen(true)}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors relative"
-            >
-              <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">{t.header.history}</span>
-              {history.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-indigo-600 text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center">
-                  {history.length}
-                </span>
-              )}
-            </button>
-            <div className="hidden md:flex text-xs sm:text-sm font-medium text-slate-500 items-center gap-1">
-              <span className="hidden lg:inline">{t.common.poweredBy}</span> Gemini <Sparkles className="w-3 h-3 text-indigo-500" />
-            </div>
+            <LanguageSwitcher />
+            
+            <AuthButton />
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:h-[calc(100vh-4rem)]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 lg:h-full">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
           
           {/* Left Column: Input & Controls */}
           <div className="lg:col-span-4 space-y-4 sm:space-y-6 py-4 sm:py-8 pb-6">
@@ -862,6 +859,25 @@ export default function App() {
         currentKey={apiKey}
         onSave={handleSaveApiKey}
       />
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-slate-200 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600">
+              <span>{t.footer.poweredBy}</span>
+              <span className="flex items-center gap-1 font-semibold text-indigo-600">
+                {t.footer.gemini}
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500">
+              <span>{t.footer.copyright}</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

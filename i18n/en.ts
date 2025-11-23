@@ -16,14 +16,14 @@ export const en: Translations = {
   },
 
   header: {
-    title: 'ProductivityFlow',
+    title: 'PlanningMind',
     settings: 'Settings',
     apiKey: 'API Key',
     history: 'History',
   },
 
   welcome: {
-    title: 'Welcome to ProductivityFlow',
+    title: 'Welcome to PlanningMind',
     subtitle: 'AI assistant that helps you optimize your time and productivity every day',
     
     feature1Title: 'Smart Planning',
@@ -36,7 +36,7 @@ export const en: Translations = {
     feature3Desc: 'Highlight current task, time countdown, and quick actions right in the app',
     
     setupTitle: 'API Key Setup Required',
-    setupDesc: 'ProductivityFlow uses Google Gemini AI to create smart schedules. You need your own API key (completely free).',
+    setupDesc: 'PlanningMind uses Google Gemini AI to create smart schedules. You need your own API key (completely free).',
     
     whyApiKey: 'Why do I need an API key?',
     reason1: 'Better security: Your key, your control',
@@ -275,6 +275,13 @@ export const en: Translations = {
     req10: 'Add ~5 minute breaks between work sessions.',
     req11: `Start work at the current time ${new Date().getHours()}:${new Date().getMinutes()}`,
     req12: 'Can edit the task name if it is misspelled or in a different language',
+  },
+  footer: {
+    poweredBy: 'Powered by',
+    gemini: 'Google Gemini AI',
+    copyright: '© 2025 PlanningMind. All rights reserved.',
+    madeWith: 'Made with',
+    love: '❤️',
   },
 };
 

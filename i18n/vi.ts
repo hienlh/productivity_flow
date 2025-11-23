@@ -14,14 +14,14 @@ export const vi = {
   },
 
   header: {
-    title: 'ProductivityFlow',
+    title: 'PlanningMind',
     settings: 'Settings',
     apiKey: 'API Key',
     history: 'Lịch sử',
   },
 
   welcome: {
-    title: 'Chào mừng đến với ProductivityFlow',
+    title: 'Chào mừng đến với PlanningMind',
     subtitle: 'Trợ lý AI giúp bạn tối ưu hóa thời gian và năng suất mỗi ngày',
     
     feature1Title: 'Lập kế hoạch thông minh',
@@ -34,7 +34,7 @@ export const vi = {
     feature3Desc: 'Highlight công việc hiện tại, countdown thời gian và quick actions ngay trên app',
     
     setupTitle: 'Cần thiết lập API Key',
-    setupDesc: 'ProductivityFlow sử dụng Google Gemini AI để tạo lịch trình thông minh. Bạn cần API key riêng để sử dụng (hoàn toàn miễn phí).',
+    setupDesc: 'PlanningMind sử dụng Google Gemini AI để tạo lịch trình thông minh. Bạn cần API key riêng để sử dụng (hoàn toàn miễn phí).',
     
     whyApiKey: 'Tại sao cần API key?',
     reason1: 'Bảo mật tốt hơn: Key của bạn, chỉ bạn quản lý',
@@ -273,6 +273,13 @@ export const vi = {
     req10: 'Giữa các lần làm việc nên có break time tầm 5 phút.',
     req11: `Bắt đầu làm việc tại thời điểm hiện tại ${new Date().getHours()}:${new Date().getMinutes()}`,
     req12: 'Có thể sửa lại tên công việc nếu sai chính tả, hoặc khác ngôn ngữ',
+  },
+  footer: {
+    poweredBy: 'Được hỗ trợ bởi',
+    gemini: 'Google Gemini AI',
+    copyright: '© 2025 PlanningMind. Tất cả quyền được bảo lưu.',
+    madeWith: 'Được tạo với',
+    love: '❤️',
   },
 };
 

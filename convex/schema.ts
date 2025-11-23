@@ -45,5 +45,13 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_timestamp", ["userId", "timestamp"]),
+
+  // User Settings table
+  userSettings: defineTable({
+    userId: v.string(),
+    language: v.string(), // 'vi' | 'en'
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"]),
 });
 

@@ -56,11 +56,14 @@ const responseSchema = {
 };
 
 export const generateSchedule = async (tasks: Task[]): Promise<{ plan: DayPlan; tokenUsage: TokenUsage }> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API Key not found");
+  // Get API key from localStorage
+  const apiKey = localStorage.getItem('gemini_api_key');
+  
+  if (!apiKey) {
+    throw new Error("API Key not found. Please add your Gemini API key in settings.");
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey });
 
   const currentTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   

@@ -7,8 +7,9 @@ import { HistoryModal } from './components/HistoryModal';
 import { BulkImportModal } from './components/BulkImportModal';
 import { DashboardView } from './components/DashboardView';
 import { FloatingActionButton } from './components/FloatingActionButton';
+import { ApiKeySetup } from './components/ApiKeySetup';
 import { generateSchedule } from './services/gemini';
-import { Sparkles, BrainCircuit, CalendarClock, LayoutDashboard, History, Upload, Copy, Trash2, Check, Edit3, Save, X, Navigation, List } from 'lucide-react';
+import { Sparkles, BrainCircuit, CalendarClock, LayoutDashboard, History, Upload, Copy, Trash2, Check, Edit3, Save, X, Navigation, List, Settings } from 'lucide-react';
 
 // LocalStorage keys
 const STORAGE_KEYS = {
@@ -56,6 +57,19 @@ export default function App() {
   const [isMobileView, setIsMobileView] = useState(false);
   const [currentTime, setCurrentTime] = useState<string>('');
   const [showDashboard, setShowDashboard] = useState(true);
+  const [apiKey, setApiKey] = useState<string>('');
+  const [showApiKeySetup, setShowApiKeySetup] = useState(false);
+
+  // Load API key on mount
+  useEffect(() => {
+    const storedKey = localStorage.getItem('gemini_api_key');
+    setApiKey(storedKey || '');
+    
+    // Show setup if no key exists
+    if (!storedKey) {
+      setShowApiKeySetup(true);
+    }
+  }, []);
 
   // Detect mobile on mount and resize
   useEffect(() => {
@@ -109,6 +123,13 @@ export default function App() {
   const handleGeneratePlan = async () => {
     if (tasks.length === 0) return;
     
+    // Check API key before generating
+    if (!apiKey) {
+      setError("Vui lòng thêm Gemini API key để sử dụng tính năng này.");
+      setShowApiKeySetup(true);
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     
@@ -132,9 +153,25 @@ export default function App() {
       
       setHistory(prev => [historyEntry, ...prev]); // Add to beginning
     } catch (err: any) {
-      setError("Không thể tạo lịch trình lúc này. Vui lòng kiểm tra API Key hoặc thử lại sau.");
+      const errorMessage = err.message || "Không thể tạo lịch trình lúc này.";
+      if (errorMessage.includes("API Key")) {
+        setError("API Key không hợp lệ hoặc đã hết quota. Vui lòng kiểm tra lại.");
+        setShowApiKeySetup(true);
+      } else {
+        setError("Không thể tạo lịch trình lúc này. Vui lòng thử lại sau.");
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSaveApiKey = (key: string) => {
+    if (key) {
+      localStorage.setItem('gemini_api_key', key);
+      setApiKey(key);
+    } else {
+      localStorage.removeItem('gemini_api_key');
+      setApiKey('');
     }
   };
 
@@ -272,7 +309,21 @@ export default function App() {
             </div>
             <h1 className="text-base sm:text-xl font-bold text-slate-800 tracking-tight">ProductivityFlow</h1>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button
+              onClick={() => setShowApiKeySetup(true)}
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors ${
+                apiKey 
+                  ? 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50' 
+                  : 'text-rose-600 bg-rose-50 hover:bg-rose-100 animate-pulse'
+              }`}
+              title={apiKey ? 'Quản lý API Key' : 'Cần thiết lập API Key'}
+            >
+              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">{apiKey ? 'Settings' : 'API Key'}</span>
+              {!apiKey && <span className="sm:hidden">!</span>}
+            </button>
+            
             <button
               onClick={() => setIsHistoryModalOpen(true)}
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors relative"
@@ -522,6 +573,14 @@ export default function App() {
         isOpen={isBulkImportOpen}
         onClose={() => setIsBulkImportOpen(false)}
         onImport={handleBulkImport}
+      />
+
+      {/* API Key Setup Modal */}
+      <ApiKeySetup
+        isOpen={showApiKeySetup}
+        onClose={() => setShowApiKeySetup(false)}
+        currentKey={apiKey}
+        onSave={handleSaveApiKey}
       />
     </div>
   );

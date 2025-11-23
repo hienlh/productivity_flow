@@ -48,4 +48,5 @@ export interface ScheduleHistory {
   tasksCount: number;
   tokenUsage: TokenUsage;
   modelUsed: string;
+  tasksText: string; // Tasks in text format for re-import
 }

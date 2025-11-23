@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Task, DayPlan, ScheduleHistory } from './types';
+import { Task, DayPlan, ScheduleHistory, Priority } from './types';
 import { TaskForm } from './components/TaskForm';
 import { TaskList } from './components/TaskList';
 import { PlanDisplay } from './components/PlanDisplay';
 import { HistoryModal } from './components/HistoryModal';
+import { BulkImportModal } from './components/BulkImportModal';
 import { generateSchedule } from './services/gemini';
-import { Sparkles, BrainCircuit, CalendarClock, LayoutDashboard, History } from 'lucide-react';
+import { Sparkles, BrainCircuit, CalendarClock, LayoutDashboard, History, Upload, Copy, Trash2, Check, Edit3, Save, X, Navigation } from 'lucide-react';
 
 // LocalStorage keys
 const STORAGE_KEYS = {
@@ -44,8 +45,12 @@ export default function App() {
     loadFromStorage(STORAGE_KEYS.HISTORY, [])
   );
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isEditingPlan, setIsEditingPlan] = useState(false);
+  const [tempEditedPlan, setTempEditedPlan] = useState<DayPlan | null>(null);
 
   // Save tasks to localStorage whenever they change
   useEffect(() => {
@@ -83,6 +88,9 @@ export default function App() {
       const { plan: generatedPlan, tokenUsage } = await generateSchedule(tasks);
       setPlan(generatedPlan);
 
+      // Export tasks to text for re-import
+      const tasksText = exportTasksToText(tasks);
+
       // Save to history
       const historyEntry: ScheduleHistory = {
         id: crypto.randomUUID(),
@@ -91,6 +99,7 @@ export default function App() {
         tasksCount: tasks.length,
         tokenUsage,
         modelUsed: 'gemini-2.5-flash',
+        tasksText,
       };
       
       setHistory(prev => [historyEntry, ...prev]); // Add to beginning
@@ -109,6 +118,86 @@ export default function App() {
 
   const handlePlanUpdate = (updatedPlan: DayPlan) => {
     setPlan(updatedPlan);
+  };
+
+  const handleStartEditing = () => {
+    setIsEditingPlan(true);
+    setTempEditedPlan(plan);
+  };
+
+  const handleSaveEdit = () => {
+    if (tempEditedPlan) {
+      setPlan(tempEditedPlan);
+    }
+    setIsEditingPlan(false);
+    setTempEditedPlan(null);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingPlan(false);
+    setTempEditedPlan(null);
+  };
+
+  const handleScrollToCurrentTask = () => {
+    const currentTask = document.getElementById('current-task');
+    if (currentTask) {
+      currentTask.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  const handleBulkImport = (importedTasks: Task[]) => {
+    setTasks(prev => [...prev, ...importedTasks]);
+    if (plan) setPlan(null); // Clear plan to encourage regeneration
+  };
+
+  // Export tasks to text format (compatible with bulk import)
+  const exportTasksToText = (tasks: Task[]): string => {
+    return tasks.map(task => {
+      let line = task.title;
+      
+      // Add duration
+      if (task.duration >= 60 && task.duration % 60 === 0) {
+        line += ` - ${task.duration / 60}h`;
+      } else {
+        line += ` - ${task.duration}p`;
+      }
+      
+      // Add fixed time if exists
+      if (task.fixedTime) {
+        line += ` - ${task.fixedTime}`;
+      }
+      
+      // Add priority
+      if (task.priority === Priority.High) {
+        line += ' !cao';
+      } else if (task.priority === Priority.Low) {
+        line += ' !thấp';
+      }
+      
+      return line;
+    }).join('\n');
+  };
+
+  const handleCopyTasks = async () => {
+    if (tasks.length === 0) return;
+    
+    const text = exportTasksToText(tasks);
+    try {
+      await navigator.clipboard.writeText(text);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleClearAllTasks = () => {
+    if (tasks.length === 0) return;
+    
+    if (window.confirm(`Bạn có chắc muốn xóa tất cả ${tasks.length} công việc?`)) {
+      setTasks([]);
+      if (plan) setPlan(null);
+    }
   };
 
   return (
@@ -142,11 +231,11 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-[calc(100vh-4rem)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
           
           {/* Left Column: Input & Controls */}
-          <div className="lg:col-span-4 space-y-6 sticky top-24">
+          <div className="lg:col-span-4 space-y-6 overflow-y-auto pr-2 pb-6" style={{maxHeight: 'calc(100vh - 8rem)'}}>
             <div className="bg-indigo-900 text-white p-6 rounded-2xl shadow-xl shadow-indigo-900/20 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
               <h2 className="text-2xl font-bold mb-2">Lập kế hoạch</h2>
@@ -164,11 +253,49 @@ export default function App() {
 
             <TaskForm onAddTask={handleAddTask} />
             
+            {/* Bulk Import Button */}
+            <button
+              onClick={() => setIsBulkImportOpen(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-dashed border-indigo-200 text-indigo-600 font-medium rounded-xl hover:bg-indigo-50 hover:border-indigo-300 transition-all group"
+            >
+              <Upload className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span>Import hàng loạt từ văn bản</span>
+            </button>
+
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-               <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                  <h3 className="font-semibold text-slate-700">Danh sách chờ</h3>
+               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-semibold text-slate-700">Danh sách chờ</h3>
+                    {tasks.length > 0 && (
+                      <span className="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{tasks.length}</span>
+                    )}
+                  </div>
                   {tasks.length > 0 && (
-                    <span className="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{tasks.length}</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleCopyTasks}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                      >
+                        {isCopied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Đã copy!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy text</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleClearAllTasks}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Xóa tất cả</span>
+                      </button>
+                    </div>
                   )}
                </div>
                <div className="p-2">
@@ -206,7 +333,7 @@ export default function App() {
           </div>
 
           {/* Right Column: Output Visualization */}
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 flex flex-col" style={{maxHeight: 'calc(100vh - 8rem)'}}>
             {!plan ? (
               <div className="h-[600px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-200 rounded-3xl bg-white/50">
                 <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
@@ -218,7 +345,59 @@ export default function App() {
                 </p>
               </div>
             ) : (
-              <PlanDisplay plan={plan} onPlanUpdate={handlePlanUpdate} />
+              <>
+                {/* Sticky Controls Bar */}
+                <div className="bg-white border border-slate-200 rounded-xl p-4 mb-4 shadow-sm flex items-center justify-between sticky top-0 z-10">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleScrollToCurrentTask}
+                      className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-700 font-medium rounded-lg hover:bg-green-100 transition-colors text-sm border border-green-200"
+                    >
+                      <Navigation className="w-4 h-4" />
+                      <span>Tới task hiện tại</span>
+                    </button>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    {!isEditingPlan ? (
+                      <button
+                        onClick={handleStartEditing}
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-indigo-200 text-indigo-600 font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                        Chỉnh sửa lịch trình
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                          Hủy
+                        </button>
+                        <button
+                          onClick={handleSaveEdit}
+                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-lg hover:shadow-lg transition-all"
+                        >
+                          <Save className="w-4 h-4" />
+                          Lưu thay đổi
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Scrollable Plan Content */}
+                <div className="flex-1 overflow-y-auto pr-2 pb-6">
+                  <PlanDisplay 
+                    plan={plan} 
+                    onPlanUpdate={handlePlanUpdate}
+                    isEditing={isEditingPlan}
+                    onEditChange={setTempEditedPlan}
+                  />
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -230,6 +409,13 @@ export default function App() {
         onClose={() => setIsHistoryModalOpen(false)}
         history={history}
         onClearHistory={handleClearHistory}
+      />
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        onImport={handleBulkImport}
       />
     </div>
   );

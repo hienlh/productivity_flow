@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { DayPlan, ScheduleItem, ScheduleType } from '../types';
-import { Sun, Moon, Coffee, Lightbulb, CheckCircle2, Briefcase, ArrowRight, Edit3, Save, X, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
+import { Sun, Moon, Coffee, Lightbulb, CheckCircle2, Briefcase, ArrowRight, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
 
 interface PlanDisplayProps {
   plan: DayPlan;
   onPlanUpdate?: (updatedPlan: DayPlan) => void;
+  isEditing?: boolean;
+  onEditChange?: (plan: DayPlan) => void;
 }
 
 interface ScheduleSegmentProps {
@@ -17,6 +19,7 @@ interface ScheduleSegmentProps {
   onMoveUp: (idx: number) => void;
   onMoveDown: (idx: number) => void;
   onDelete: (idx: number) => void;
+  currentTaskTime?: string;
 }
 
 const ScheduleSegment: React.FC<ScheduleSegmentProps> = ({ 
@@ -28,9 +31,23 @@ const ScheduleSegment: React.FC<ScheduleSegmentProps> = ({
   onItemChange,
   onMoveUp,
   onMoveDown,
-  onDelete
+  onDelete,
+  currentTaskTime
 }) => {
   if (items.length === 0) return null;
+
+  // Helper to check if item is current
+  const isCurrentTask = (item: ScheduleItem): boolean => {
+    if (!currentTaskTime) return false;
+    const [currentHour, currentMinute] = currentTaskTime.split(':').map(Number);
+    const currentTotalMinutes = currentHour * 60 + currentMinute;
+
+    const [itemHour, itemMinute] = item.time.split(':').map(Number);
+    const itemStartMinutes = itemHour * 60 + itemMinute;
+    const itemEndMinutes = itemStartMinutes + item.duration;
+
+    return currentTotalMinutes >= itemStartMinutes && currentTotalMinutes < itemEndMinutes;
+  };
 
   return (
     <div className="mb-8">
@@ -53,10 +70,21 @@ const ScheduleSegment: React.FC<ScheduleSegmentProps> = ({
              TypeIcon = CheckCircle2;
            }
 
+           const isCurrent = isCurrentTask(item);
+           
            return (
-             <div key={idx} className="relative pl-8 group">
-                <div className="absolute -left-[9px] top-3 w-4 h-4 rounded-full border-2 border-white bg-slate-300 group-hover:bg-indigo-500 transition-colors shadow-sm"></div>
-                <div className={`p-4 rounded-xl border ${typeStyles} transition-all ${isEditing ? 'ring-2 ring-indigo-200' : ''}`}>
+             <div 
+               key={idx} 
+               className="relative pl-8 group"
+               data-task-time={item.time}
+               id={isCurrent ? 'current-task' : undefined}
+             >
+                <div className={`absolute -left-[9px] top-3 w-4 h-4 rounded-full border-2 border-white transition-all shadow-sm ${
+                  isCurrent ? 'bg-green-500 animate-pulse' : 'bg-slate-300 group-hover:bg-indigo-500'
+                }`}></div>
+                <div className={`p-4 rounded-xl border ${typeStyles} transition-all ${
+                  isEditing ? 'ring-2 ring-indigo-200' : ''
+                } ${isCurrent ? 'ring-4 ring-green-400 bg-green-50 border-green-300' : ''}`}>
                    {/* Edit Controls */}
                    {isEditing && (
                      <div className="flex gap-1 mb-3 justify-end">
@@ -147,14 +175,36 @@ const ScheduleSegment: React.FC<ScheduleSegmentProps> = ({
   );
 };
 
-export const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, onPlanUpdate }) => {
-  const [isEditing, setIsEditing] = useState(false);
+export const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, onPlanUpdate, isEditing = false, onEditChange }) => {
   const [editedPlan, setEditedPlan] = useState<DayPlan>(plan);
+  const [currentTime, setCurrentTime] = useState<string>('');
+
+  // Update current time every minute
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      setCurrentTime(`${hours}:${minutes}`);
+    };
+    
+    updateTime();
+    const interval = setInterval(updateTime, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Reset edited plan when plan prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     setEditedPlan(plan);
   }, [plan]);
+
+  // Notify parent when edit changes
+  useEffect(() => {
+    if (isEditing && onEditChange) {
+      onEditChange(editedPlan);
+    }
+  }, [editedPlan, isEditing, onEditChange]);
 
   const handleItemChange = (segment: 'morning' | 'afternoon' | 'evening', idx: number, field: keyof ScheduleItem, value: any) => {
     setEditedPlan(prev => ({
@@ -192,52 +242,10 @@ export const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, onPlanUpdate }) 
     }
   };
 
-  const handleSave = () => {
-    if (onPlanUpdate) {
-      onPlanUpdate(editedPlan);
-    }
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditedPlan(plan);
-    setIsEditing(false);
-  };
-
   const displayPlan = isEditing ? editedPlan : plan;
 
   return (
-    <div className="space-y-8 animate-fadeIn">
-      {/* Edit Controls */}
-      <div className="flex justify-end gap-2">
-        {!isEditing ? (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-indigo-200 text-indigo-600 font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm"
-          >
-            <Edit3 className="w-4 h-4" />
-            Chỉnh sửa lịch trình
-          </button>
-        ) : (
-          <>
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              <X className="w-4 h-4" />
-              Hủy
-            </button>
-            <button
-              onClick={handleSave}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-lg hover:shadow-lg transition-all"
-            >
-              <Save className="w-4 h-4" />
-              Lưu thay đổi
-            </button>
-          </>
-        )}
-      </div>
-
+    <div className="space-y-6 animate-fadeIn">
       {/* Tips Section */}
       {displayPlan.tips.length > 0 && (
         <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-6 shadow-sm">
@@ -268,6 +276,7 @@ export const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, onPlanUpdate }) 
             onMoveUp={(idx) => handleMoveUp('morning', idx)}
             onMoveDown={(idx) => handleMoveDown('morning', idx)}
             onDelete={(idx) => handleDelete('morning', idx)}
+            currentTaskTime={currentTime}
           />
           <ScheduleSegment 
             title="Buổi Chiều" 
@@ -279,6 +288,7 @@ export const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, onPlanUpdate }) 
             onMoveUp={(idx) => handleMoveUp('afternoon', idx)}
             onMoveDown={(idx) => handleMoveDown('afternoon', idx)}
             onDelete={(idx) => handleDelete('afternoon', idx)}
+            currentTaskTime={currentTime}
           />
           <ScheduleSegment 
             title="Buổi Tối" 
@@ -290,6 +300,7 @@ export const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, onPlanUpdate }) 
             onMoveUp={(idx) => handleMoveUp('evening', idx)}
             onMoveDown={(idx) => handleMoveDown('evening', idx)}
             onDelete={(idx) => handleDelete('evening', idx)}
+            currentTaskTime={currentTime}
           />
       </div>
     </div>

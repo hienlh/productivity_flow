@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ScheduleHistory } from '../types';
-import { X, History, TrendingUp, DollarSign, Zap, Calendar, Trash2 } from 'lucide-react';
+import { X, History, TrendingUp, DollarSign, Zap, Calendar, Trash2, Copy, Check, FileText } from 'lucide-react';
 
 interface HistoryModalProps {
   isOpen: boolean;
@@ -15,6 +15,9 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
   history,
   onClearHistory 
 }) => {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   if (!isOpen) return null;
 
   const totalTokens = history.reduce((sum, h) => sum + h.tokenUsage.totalTokens, 0);
@@ -33,6 +36,20 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
 
   const formatCost = (cost: number) => {
     return cost < 0.01 ? '< $0.01' : `$${cost.toFixed(4)}`;
+  };
+
+  const handleCopyTasks = async (entry: ScheduleHistory) => {
+    try {
+      await navigator.clipboard.writeText(entry.tasksText);
+      setCopiedId(entry.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const toggleExpand = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
   };
 
   return (
@@ -107,7 +124,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-3 text-sm">
+                  <div className="grid grid-cols-4 gap-3 text-sm mb-3">
                     <div className="bg-blue-50 rounded-lg p-3">
                       <div className="text-blue-600 text-xs mb-1">Input Tokens</div>
                       <div className="font-semibold text-blue-900">
@@ -136,6 +153,46 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                       </div>
                     </div>
                   </div>
+
+                  {/* Tasks Text Section */}
+                  {entry.tasksText && (
+                    <div className="mt-3 border-t border-slate-100 pt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <button
+                          onClick={() => toggleExpand(entry.id)}
+                          className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-indigo-600 transition-colors"
+                        >
+                          <FileText className="w-4 h-4" />
+                          <span>Danh sách tasks ({entry.tasksCount})</span>
+                          <span className="text-xs text-slate-400">
+                            {expandedId === entry.id ? '▼' : '▶'}
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => handleCopyTasks(entry)}
+                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                        >
+                          {copiedId === entry.id ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Đã copy!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy tasks</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      
+                      {expandedId === entry.id && (
+                        <pre className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-700 overflow-x-auto whitespace-pre-wrap font-mono max-h-48 overflow-y-auto">
+{entry.tasksText}
+                        </pre>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -143,19 +200,24 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-200 p-4 bg-slate-50 flex items-center justify-between">
-          <div className="text-xs text-slate-500">
-            💡 Chi phí được tính dựa trên Gemini 2.5 Flash pricing
+        <div className="border-t border-slate-200 p-4 bg-slate-50">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs text-slate-500">
+              💡 Chi phí được tính dựa trên Gemini 2.5 Flash pricing
+            </div>
+            {history.length > 0 && (
+              <button
+                onClick={onClearHistory}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                Xóa lịch sử
+              </button>
+            )}
           </div>
-          {history.length > 0 && (
-            <button
-              onClick={onClearHistory}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-              Xóa lịch sử
-            </button>
-          )}
+          <div className="text-xs text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-100">
+            📋 <strong>Mẹo:</strong> Click "Copy tasks" để sao chép danh sách, sau đó dùng "Import hàng loạt" để tái sử dụng!
+          </div>
         </div>
       </div>
     </div>

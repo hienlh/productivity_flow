@@ -272,7 +272,7 @@ export const en: Translations = {
     req7: 'Provide optimization tips specific to this task list.',
     req8: 'Response language: English.',
     req9: 'Include time for daily routines: breakfast, lunch, dinner, shower, sleep, etc.',
-    req10: 'Design based on pomodoro technique. Add ~5 minute breaks between work sessions.',
+    req10: 'Add ~5 minute breaks between work sessions.',
     req11: `Start work at the current time ${new Date().getHours()}:${new Date().getMinutes()}`,
     req12: 'Can edit the task name if it is misspelled or in a different language',
   },

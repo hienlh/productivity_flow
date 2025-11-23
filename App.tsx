@@ -8,6 +8,7 @@ import { BulkImportModal } from './components/BulkImportModal';
 import { DashboardView } from './components/DashboardView';
 import { FloatingActionButton } from './components/FloatingActionButton';
 import { ApiKeySetup } from './components/ApiKeySetup';
+import { WelcomeModal } from './components/WelcomeModal';
 import { generateSchedule } from './services/gemini';
 import { Sparkles, BrainCircuit, CalendarClock, LayoutDashboard, History, Upload, Copy, Trash2, Check, Edit3, Save, X, Navigation, List, Settings } from 'lucide-react';
 
@@ -59,14 +60,20 @@ export default function App() {
   const [showDashboard, setShowDashboard] = useState(true);
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKeySetup, setShowApiKeySetup] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
-  // Load API key on mount
+  // Load API key and check if first visit on mount
   useEffect(() => {
     const storedKey = localStorage.getItem('gemini_api_key');
+    const hasSeenWelcome = localStorage.getItem('has_seen_welcome');
+    
     setApiKey(storedKey || '');
     
-    // Show setup if no key exists
-    if (!storedKey) {
+    // Show welcome first if it's first visit and no API key
+    if (!storedKey && !hasSeenWelcome) {
+      setShowWelcome(true);
+    } else if (!storedKey) {
+      // If seen welcome but no key, go straight to API setup
       setShowApiKeySetup(true);
     }
   }, []);
@@ -173,6 +180,17 @@ export default function App() {
       localStorage.removeItem('gemini_api_key');
       setApiKey('');
     }
+  };
+
+  const handleWelcomeClose = () => {
+    localStorage.setItem('has_seen_welcome', 'true');
+    setShowWelcome(false);
+  };
+
+  const handleContinueToSetup = () => {
+    localStorage.setItem('has_seen_welcome', 'true');
+    setShowWelcome(false);
+    setShowApiKeySetup(true);
   };
 
   const handleClearHistory = () => {
@@ -343,11 +361,11 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:h-[calc(100vh-4rem)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 lg:h-full">
           
           {/* Left Column: Input & Controls */}
-          <div className="lg:col-span-4 space-y-4 sm:space-y-6 overflow-y-auto pr-2 pb-6 lg:max-h-[calc(100vh-8rem)]">
+          <div className="lg:col-span-4 space-y-4 sm:space-y-6 py-4 sm:py-8 pb-6">
             <div className="bg-indigo-900 text-white p-6 rounded-2xl shadow-xl shadow-indigo-900/20 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
               <h2 className="text-2xl font-bold mb-2">Lập kế hoạch</h2>
@@ -445,7 +463,7 @@ export default function App() {
           </div>
 
           {/* Right Column: Output Visualization */}
-          <div className="lg:col-span-8 flex flex-col lg:max-h-[calc(100vh-8rem)]">
+          <div className="lg:col-span-8 flex flex-col py-4 sm:py-8 lg:h-full">
             {!plan ? (
               <div className="min-h-[400px] sm:h-[600px] flex flex-col items-center justify-center text-center p-4 sm:p-8 border-2 border-dashed border-slate-200 rounded-2xl sm:rounded-3xl bg-white/50">
                 <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
@@ -533,7 +551,7 @@ export default function App() {
                 </div>
                 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto pr-2 pb-6 lg:max-h-[calc(100vh-16rem)]">
+                <div className="flex-1 overflow-y-auto pr-2 pb-6">
                   {showDashboard ? (
                     <DashboardView plan={plan} />
                   ) : (
@@ -573,6 +591,13 @@ export default function App() {
         isOpen={isBulkImportOpen}
         onClose={() => setIsBulkImportOpen(false)}
         onImport={handleBulkImport}
+      />
+
+      {/* Welcome Modal */}
+      <WelcomeModal
+        isOpen={showWelcome}
+        onClose={handleWelcomeClose}
+        onContinueToSetup={handleContinueToSetup}
       />
 
       {/* API Key Setup Modal */}

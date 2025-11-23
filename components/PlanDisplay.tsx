@@ -50,12 +50,12 @@ const ScheduleSegment: React.FC<ScheduleSegmentProps> = ({
   };
 
   return (
-    <div className="mb-8">
-      <div className={`flex items-center gap-2 mb-4 pb-2 border-b ${colorClass}`}>
-        <div className="p-1.5 rounded-lg bg-white shadow-sm">{icon}</div>
-        <h3 className="font-bold text-lg text-slate-800">{title}</h3>
+    <div className="mb-6 sm:mb-8">
+      <div className={`flex items-center gap-2 mb-3 sm:mb-4 pb-2 border-b ${colorClass}`}>
+        <div className="p-1 sm:p-1.5 rounded-lg bg-white shadow-sm">{icon}</div>
+        <h3 className="font-bold text-base sm:text-lg text-slate-800">{title}</h3>
       </div>
-      <div className="relative border-l-2 border-slate-200 ml-3 space-y-6 py-2">
+      <div className="relative border-l-2 border-slate-200 ml-2 sm:ml-3 space-y-4 sm:space-y-6 py-2">
         {items.map((item, idx) => {
            let typeStyles = "";
            let TypeIcon = Briefcase;
@@ -75,16 +75,16 @@ const ScheduleSegment: React.FC<ScheduleSegmentProps> = ({
            return (
              <div 
                key={idx} 
-               className="relative pl-8 group"
+               className="relative pl-6 sm:pl-8 group"
                data-task-time={item.time}
                id={isCurrent ? 'current-task' : undefined}
              >
-                <div className={`absolute -left-[9px] top-3 w-4 h-4 rounded-full border-2 border-white transition-all shadow-sm ${
+                <div className={`absolute -left-[7px] sm:-left-[9px] top-2 sm:top-3 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-white transition-all shadow-sm ${
                   isCurrent ? 'bg-green-500 animate-pulse' : 'bg-slate-300 group-hover:bg-indigo-500'
                 }`}></div>
-                <div className={`p-4 rounded-xl border ${typeStyles} transition-all ${
+                <div className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border ${typeStyles} transition-all ${
                   isEditing ? 'ring-2 ring-indigo-200' : ''
-                } ${isCurrent ? 'ring-4 ring-green-400 bg-green-50 border-green-300' : ''}`}>
+                } ${isCurrent ? 'ring-2 sm:ring-4 ring-green-400 bg-green-50 border-green-300' : ''}`}>
                    {/* Edit Controls */}
                    {isEditing && (
                      <div className="flex gap-1 mb-3 justify-end">
@@ -245,17 +245,17 @@ export const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, onPlanUpdate, is
   const displayPlan = isEditing ? editedPlan : plan;
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-4 sm:space-y-6 animate-fadeIn">
       {/* Tips Section */}
       {displayPlan.tips.length > 0 && (
-        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 mb-4 text-indigo-800">
-            <Lightbulb className="w-5 h-5" />
-            <h3 className="font-bold">Lời khuyên tối ưu từ AI</h3>
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4 text-indigo-800">
+            <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5" />
+            <h3 className="font-bold text-sm sm:text-base">Lời khuyên tối ưu từ AI</h3>
           </div>
           <ul className="space-y-2">
             {displayPlan.tips.map((tip, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+              <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm text-slate-700">
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
                 {tip}
               </li>
@@ -265,7 +265,7 @@ export const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, onPlanUpdate, is
       )}
 
       {/* Timeline Sections */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xl shadow-slate-100/50">
+      <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-100 p-4 sm:p-6 shadow-xl shadow-slate-100/50">
           <ScheduleSegment 
             title="Buổi Sáng" 
             icon={<Sun className="w-5 h-5 text-amber-500" />} 

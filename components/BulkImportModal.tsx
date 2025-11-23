@@ -136,18 +136,18 @@ Code review - 30p - 2pm
 Nghiên cứu tài liệu - 45p !thấp`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-6">
+        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                <Upload className="w-6 h-6" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <Upload className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Import hàng loạt</h2>
-                <p className="text-indigo-100 text-sm">Thêm nhiều công việc cùng lúc</p>
+                <h2 className="text-lg sm:text-2xl font-bold">Import hàng loạt</h2>
+                <p className="text-indigo-100 text-xs sm:text-sm">Thêm nhiều công việc cùng lúc</p>
               </div>
             </div>
             <button

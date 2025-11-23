@@ -53,18 +53,18 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                <History className="w-6 h-6" />
+        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <History className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Lịch sử tạo lịch trình</h2>
-                <p className="text-indigo-100 text-sm">{history.length} lần tạo lịch</p>
+                <h2 className="text-lg sm:text-2xl font-bold">Lịch sử tạo lịch trình</h2>
+                <p className="text-indigo-100 text-xs sm:text-sm">{history.length} lần tạo lịch</p>
               </div>
             </div>
             <button
@@ -76,20 +76,22 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
           </div>
 
           {/* Summary Stats */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/10 backdrop-blur rounded-lg p-4">
-              <div className="flex items-center gap-2 text-indigo-100 text-sm mb-1">
-                <Zap className="w-4 h-4" />
-                <span>Tổng Tokens</span>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="bg-white/10 backdrop-blur rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-1 sm:gap-2 text-indigo-100 text-xs sm:text-sm mb-1">
+                <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Tổng Tokens</span>
+                <span className="sm:hidden">Tokens</span>
               </div>
-              <div className="text-2xl font-bold">{totalTokens.toLocaleString()}</div>
+              <div className="text-lg sm:text-2xl font-bold">{totalTokens.toLocaleString()}</div>
             </div>
-            <div className="bg-white/10 backdrop-blur rounded-lg p-4">
-              <div className="flex items-center gap-2 text-indigo-100 text-sm mb-1">
-                <DollarSign className="w-4 h-4" />
-                <span>Tổng Chi phí ước tính</span>
+            <div className="bg-white/10 backdrop-blur rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-1 sm:gap-2 text-indigo-100 text-xs sm:text-sm mb-1">
+                <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Tổng Chi phí</span>
+                <span className="sm:hidden">Chi phí</span>
               </div>
-              <div className="text-2xl font-bold">{formatCost(totalCost)}</div>
+              <div className="text-lg sm:text-2xl font-bold">{formatCost(totalCost)}</div>
             </div>
           </div>
         </div>

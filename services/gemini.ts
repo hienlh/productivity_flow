@@ -1,5 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Task, DayPlan, Priority, TokenUsage } from "../types";
+import { vi } from '../i18n/vi';
+import { en } from '../i18n/en';
+import type { Language } from '../contexts/LanguageContext';
 
 // Gemini 2.5 Flash Pricing (as of 2024)
 // Source: https://ai.google.dev/pricing
@@ -55,7 +58,7 @@ const responseSchema = {
   required: ["morning", "afternoon", "evening", "tips"]
 };
 
-export const generateSchedule = async (tasks: Task[]): Promise<{ plan: DayPlan; tokenUsage: TokenUsage }> => {
+export const generateSchedule = async (tasks: Task[], language: Language = 'vi'): Promise<{ plan: DayPlan; tokenUsage: TokenUsage }> => {
   // Get API key from localStorage
   const apiKey = localStorage.getItem('gemini_api_key');
   
@@ -65,43 +68,45 @@ export const generateSchedule = async (tasks: Task[]): Promise<{ plan: DayPlan; 
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const currentTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  // Get translations based on language
+  const translations = language === 'vi' ? vi : en;
+  const t = translations.aiPrompt;
+
+  const currentTime = new Date().toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' });
   
   // Separate fixed time tasks from flexible tasks
   const fixedTimeTasks = tasks.filter(t => t.fixedTime);
   const flexibleTasks = tasks.filter(t => !t.fixedTime);
 
   const prompt = `
-    Tôi là một trợ lý năng suất cá nhân. Hãy giúp tôi lập kế hoạch làm việc dựa trên danh sách công việc sau đây.
+    ${t.intro}
     
-    Thời gian hiện tại là: ${currentTime}.
-    Nếu thời gian hiện tại là buổi chiều hoặc tối, hãy lên lịch cho ngày mai hoặc phần còn lại của ngày hôm nay một cách hợp lý.
+    ${t.currentTime}: ${currentTime}.
+    ${t.timeNote}
     
     ${fixedTimeTasks.length > 0 ? `
-    ⚠️ QUAN TRỌNG - CÁC CÔNG VIỆC CÓ THỜI GIAN CỐ ĐỊNH (BẮT BUỘC):
+    ${t.fixedTasksTitle}
     ${JSON.stringify(fixedTimeTasks, null, 2)}
     
-    Những công việc này PHẢI được sắp xếp đúng thời gian "fixedTime" được chỉ định.
-    Ví dụ: Nếu có "fixedTime": "15:00" và "duration": 60, thì phải sắp xếp từ 15:00-16:00.
-    KHÔNG ĐƯỢC thay đổi thời gian này!
+    ${t.fixedTasksNote}
     ` : ''}
     
     ${flexibleTasks.length > 0 ? `
-    Các công việc linh hoạt (có thể sắp xếp):
+    ${t.flexibleTasksTitle}
     ${JSON.stringify(flexibleTasks, null, 2)}
     ` : ''}
     
-    Yêu cầu:
-    1. **BẮT BUỘC**: Các công việc có "fixedTime" PHẢI được sắp xếp đúng thời gian đã chỉ định.
-    2. Sắp xếp các công việc linh hoạt xung quanh các công việc có thời gian cố định.
-    3. Sắp xếp công việc linh hoạt dựa trên Mức độ ưu tiên (Cao làm trước) và Thời hạn (Deadline).
-    4. Tự động chèn thời gian nghỉ (break) hợp lý (ví dụ: làm 60-90 phút nghỉ 10-15 phút), nhưng tránh đặt break ngay trước/sau fixed time tasks.
-    5. Thêm thời gian đệm (buffer) nếu cần thiết để tránh quá tải và để di chuyển giữa các công việc.
-    6. Gom nhóm các công việc tương tự nhau nếu có thể.
-    7. Xuất ra các mẹo tối ưu hóa cụ thể cho danh sách này.
-    8. Ngôn ngữ phản hồi: Tiếng Việt.
-    9. Có thời gian cho các việc hằng ngày như: ăn sáng, ăn trưa, ăn tối, tắm, ngủ, ...
-    10. Nên thiết kế theo pomodoro technique. Giữa các lần làm việc nên có break time tầm 5 phút.
+    ${t.requirementsTitle}
+    1. ${t.req1}
+    2. ${t.req2}
+    3. ${t.req3}
+    4. ${t.req4}
+    5. ${t.req5}
+    6. ${t.req6}
+    7. ${t.req7}
+    8. ${t.req8}
+    9. ${t.req9}
+    10. ${t.req10}
   `;
 
   try {

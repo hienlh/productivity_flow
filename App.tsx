@@ -9,8 +9,10 @@ import { DashboardView } from './components/DashboardView';
 import { FloatingActionButton } from './components/FloatingActionButton';
 import { ApiKeySetup } from './components/ApiKeySetup';
 import { WelcomeModal } from './components/WelcomeModal';
+import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { generateSchedule } from './services/gemini';
-import { Sparkles, BrainCircuit, CalendarClock, LayoutDashboard, History, Upload, Copy, Trash2, Check, Edit3, Save, X, Navigation, List, Settings } from 'lucide-react';
+import { useLanguage } from './contexts/LanguageContext';
+import { Sparkles, BrainCircuit, CalendarClock, LayoutDashboard, History, Upload, Copy, Trash2, Check, Edit3, Save, X, Navigation, List, Settings, Languages } from 'lucide-react';
 
 // LocalStorage keys
 const STORAGE_KEYS = {
@@ -39,6 +41,7 @@ const saveToStorage = <T,>(key: string, value: T): void => {
 };
 
 export default function App() {
+  const { t, language } = useLanguage();
   const [tasks, setTasks] = useState<Task[]>(() => 
     loadFromStorage(STORAGE_KEYS.TASKS, [])
   );
@@ -62,19 +65,14 @@ export default function App() {
   const [showApiKeySetup, setShowApiKeySetup] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
 
-  // Load API key and check if first visit on mount
+  // Load API key on mount
   useEffect(() => {
     const storedKey = localStorage.getItem('gemini_api_key');
-    const hasSeenWelcome = localStorage.getItem('has_seen_welcome');
-    
     setApiKey(storedKey || '');
     
-    // Show welcome first if it's first visit and no API key
-    if (!storedKey && !hasSeenWelcome) {
+    // Always show welcome if no API key
+    if (!storedKey) {
       setShowWelcome(true);
-    } else if (!storedKey) {
-      // If seen welcome but no key, go straight to API setup
-      setShowApiKeySetup(true);
     }
   }, []);
 
@@ -132,7 +130,7 @@ export default function App() {
     
     // Check API key before generating
     if (!apiKey) {
-      setError("Vui lòng thêm Gemini API key để sử dụng tính năng này.");
+      setError(t.generate.errors.noApiKey);
       setShowApiKeySetup(true);
       return;
     }
@@ -141,7 +139,7 @@ export default function App() {
     setError(null);
     
     try {
-      const { plan: generatedPlan, tokenUsage } = await generateSchedule(tasks);
+      const { plan: generatedPlan, tokenUsage } = await generateSchedule(tasks, language);
       setPlan(generatedPlan);
 
       // Export tasks to text for re-import
@@ -160,12 +158,12 @@ export default function App() {
       
       setHistory(prev => [historyEntry, ...prev]); // Add to beginning
     } catch (err: any) {
-      const errorMessage = err.message || "Không thể tạo lịch trình lúc này.";
+      const errorMessage = err.message || "";
       if (errorMessage.includes("API Key")) {
-        setError("API Key không hợp lệ hoặc đã hết quota. Vui lòng kiểm tra lại.");
+        setError(t.generate.errors.invalidApiKey);
         setShowApiKeySetup(true);
       } else {
-        setError("Không thể tạo lịch trình lúc này. Vui lòng thử lại sau.");
+        setError(t.generate.errors.generic);
       }
     } finally {
       setIsLoading(false);
@@ -183,12 +181,11 @@ export default function App() {
   };
 
   const handleWelcomeClose = () => {
-    localStorage.setItem('has_seen_welcome', 'true');
     setShowWelcome(false);
+    // User chose "Later" - respect their choice
   };
 
   const handleContinueToSetup = () => {
-    localStorage.setItem('has_seen_welcome', 'true');
     setShowWelcome(false);
     setShowApiKeySetup(true);
   };
@@ -310,7 +307,7 @@ export default function App() {
   const handleClearAllTasks = () => {
     if (tasks.length === 0) return;
     
-    if (window.confirm(`Bạn có chắc muốn xóa tất cả ${tasks.length} công việc?`)) {
+    if (window.confirm(t.taskList.confirmClear)) {
       setTasks([]);
       if (plan) setPlan(null);
     }
@@ -325,9 +322,11 @@ export default function App() {
             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-200">
               <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <h1 className="text-base sm:text-xl font-bold text-slate-800 tracking-tight">ProductivityFlow</h1>
+            <h1 className="text-base sm:text-xl font-bold text-slate-800 tracking-tight">{t.header.title}</h1>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
+            <LanguageSwitcher />
+            
             <button
               onClick={() => setShowApiKeySetup(true)}
               className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors ${
@@ -338,7 +337,7 @@ export default function App() {
               title={apiKey ? 'Quản lý API Key' : 'Cần thiết lập API Key'}
             >
               <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">{apiKey ? 'Settings' : 'API Key'}</span>
+              <span className="hidden sm:inline">{apiKey ? t.header.settings : t.header.apiKey}</span>
               {!apiKey && <span className="sm:hidden">!</span>}
             </button>
             
@@ -347,7 +346,7 @@ export default function App() {
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors relative"
             >
               <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Lịch sử</span>
+              <span className="hidden sm:inline">{t.header.history}</span>
               {history.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-indigo-600 text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center">
                   {history.length}
@@ -355,7 +354,7 @@ export default function App() {
               )}
             </button>
             <div className="hidden md:flex text-xs sm:text-sm font-medium text-slate-500 items-center gap-1">
-              <span className="hidden lg:inline">Powered by</span> Gemini <Sparkles className="w-3 h-3 text-indigo-500" />
+              <span className="hidden lg:inline">{t.common.poweredBy}</span> Gemini <Sparkles className="w-3 h-3 text-indigo-500" />
             </div>
           </div>
         </div>

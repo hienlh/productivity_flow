@@ -249,7 +249,7 @@ export const vi = {
     req8: 'Ngôn ngữ phản hồi: Tiếng Việt.',
     req9: 'Có thời gian cho các việc hằng ngày như: ăn sáng, ăn trưa, ăn tối, tắm, ngủ, ...',
     req10: 'Nên thiết kế theo pomodoro technique. Giữa các lần làm việc nên có break time tầm 5 phút.',
-    req11: 'Bắt đầu làm việc tại thời điểm hiện tại.',
+    req11: `Bắt đầu làm việc tại thời điểm hiện tại ${new Date().getHours()}:${new Date().getMinutes()}`,
     req12: 'Có thể sửa lại tên công việc nếu sai chính tả, hoặc khác ngôn ngữ',
   },
 };

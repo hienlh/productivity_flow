@@ -225,12 +225,34 @@ export const en: Translations = {
       invalidApiKey: 'Invalid API Key or quota exceeded. Please check again.',
       generic: 'Unable to generate schedule. Please try again later.',
     },
+    
+    timeWarning: {
+      title: '⚠️ Warning: Not Enough Time!',
+      needed: 'Needed',
+      available: 'Available',
+      hours: 'hours',
+      minutes: 'min',
+      message: 'Total task time exceeds remaining time today.',
+      suggestions: 'Suggestions:',
+      suggestion1: 'Reduce duration of some tasks',
+      suggestion2: 'Remove low priority tasks',
+      suggestion3: 'Split tasks across multiple days',
+      suggestion4: 'Schedule for tomorrow instead of today',
+    },
   },
 
   priority: {
     high: 'High',
     medium: 'Medium',
     low: 'Low',
+  },
+
+  auth: {
+    signIn: 'Sign in to Sync',
+    signInShort: 'Sign In',
+    synced: 'Synced',
+    syncError: 'Sync Error',
+    offlineMode: 'Offline Mode',
   },
 
   aiPrompt: {

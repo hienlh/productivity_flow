@@ -223,12 +223,34 @@ export const vi = {
       invalidApiKey: 'API Key không hợp lệ hoặc đã hết quota. Vui lòng kiểm tra lại.',
       generic: 'Không thể tạo lịch trình lúc này. Vui lòng thử lại sau.',
     },
+    
+    timeWarning: {
+      title: '⚠️ Cảnh báo: Không đủ thời gian!',
+      needed: 'Cần',
+      available: 'Còn lại',
+      hours: 'giờ',
+      minutes: 'phút',
+      message: 'Tổng thời gian công việc vượt quá thời gian còn lại trong ngày.',
+      suggestions: 'Gợi ý:',
+      suggestion1: 'Giảm thời lượng một số công việc',
+      suggestion2: 'Xóa các công việc ưu tiên thấp',
+      suggestion3: 'Chia công việc ra nhiều ngày',
+      suggestion4: 'Lên lịch cho ngày mai thay vì hôm nay',
+    },
   },
 
   priority: {
     high: 'Cao',
     medium: 'Trung bình',
     low: 'Thấp',
+  },
+
+  auth: {
+    signIn: 'Đăng nhập để đồng bộ',
+    signInShort: 'Đăng nhập',
+    synced: 'Đã đồng bộ',
+    syncError: 'Lỗi đồng bộ',
+    offlineMode: 'Chế độ offline',
   },
 
   aiPrompt: {

@@ -10,9 +10,13 @@ import { FloatingActionButton } from './components/FloatingActionButton';
 import { ApiKeySetup } from './components/ApiKeySetup';
 import { WelcomeModal } from './components/WelcomeModal';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
+import { AuthButton } from './components/AuthButton';
 import { generateSchedule } from './services/gemini';
 import { useLanguage } from './contexts/LanguageContext';
-import { Sparkles, BrainCircuit, CalendarClock, LayoutDashboard, History, Upload, Copy, Trash2, Check, Edit3, Save, X, Navigation, List, Settings, Languages } from 'lucide-react';
+import { useUser } from '@clerk/clerk-react';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from './convex/_generated/api';
+import { Sparkles, BrainCircuit, CalendarClock, LayoutDashboard, History, Upload, Copy, Trash2, Check, Edit3, Save, X, Navigation, List, Settings, Languages, AlertCircle } from 'lucide-react';
 
 // LocalStorage keys
 const STORAGE_KEYS = {
@@ -42,6 +46,22 @@ const saveToStorage = <T,>(key: string, value: T): void => {
 
 export default function App() {
   const { t, language } = useLanguage();
+  const { user, isSignedIn, isLoaded } = useUser();
+  
+  // Convex queries and mutations
+  const convexTasks = useQuery(api.tasks.list, isSignedIn && user ? { userId: user.id } : "skip");
+  const convexPlan = useQuery(api.plans.get, isSignedIn && user ? { userId: user.id } : "skip");
+  const convexHistory = useQuery(api.history.list, isSignedIn && user ? { userId: user.id } : "skip");
+  
+  const addTaskMutation = useMutation(api.tasks.add);
+  const removeTaskMutation = useMutation(api.tasks.remove);
+  const syncTasksMutation = useMutation(api.tasks.sync);
+  const savePlanMutation = useMutation(api.plans.save);
+  const addHistoryMutation = useMutation(api.history.add);
+  const clearAllTasksMutation = useMutation(api.tasks.clearAll);
+  const clearHistoryMutation = useMutation(api.history.clearAll);
+  
+  // Local state (for offline mode or not signed in)
   const [tasks, setTasks] = useState<Task[]>(() => 
     loadFromStorage(STORAGE_KEYS.TASKS, [])
   );
@@ -61,20 +81,78 @@ export default function App() {
   const [isMobileView, setIsMobileView] = useState(false);
   const [currentTime, setCurrentTime] = useState<string>('');
   const [showDashboard, setShowDashboard] = useState(true);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
+  const [timeWarningData, setTimeWarningData] = useState<{ needed: number; available: number } | null>(null);
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKeySetup, setShowApiKeySetup] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+
+  // Sync with Convex when signed in
+  useEffect(() => {
+    if (isSignedIn && user && convexTasks) {
+      // Load tasks from Convex
+      const tasksFromConvex = convexTasks.map((task: any) => ({
+        id: task._id,
+        title: task.title,
+        duration: task.duration,
+        priority: task.priority as Priority,
+        deadline: task.deadline,
+        fixedTime: task.fixedTime,
+      }));
+      setTasks(tasksFromConvex);
+    }
+  }, [isSignedIn, user, convexTasks]);
+
+  useEffect(() => {
+    if (isSignedIn && user && convexPlan) {
+      // Load plan from Convex
+      setPlan(convexPlan ? {
+        morning: convexPlan.morning,
+        afternoon: convexPlan.afternoon,
+        evening: convexPlan.evening,
+        tips: convexPlan.tips,
+      } : null);
+    }
+  }, [isSignedIn, user, convexPlan]);
+
+  useEffect(() => {
+    if (isSignedIn && user && convexHistory) {
+      // Load history from Convex
+      const historyFromConvex = convexHistory.map((h: any) => ({
+        id: h._id,
+        timestamp: h.timestamp,
+        plan: h.plan,
+        tasksCount: h.tasksCount,
+        tokenUsage: h.tokenUsage,
+        modelUsed: h.modelUsed,
+        tasksText: h.tasksText,
+      }));
+      setHistory(historyFromConvex);
+    }
+  }, [isSignedIn, user, convexHistory]);
 
   // Load API key on mount
   useEffect(() => {
     const storedKey = localStorage.getItem('gemini_api_key');
     setApiKey(storedKey || '');
-    
-    // Always show welcome if no API key
-    if (!storedKey) {
-      setShowWelcome(true);
-    }
   }, []);
+
+  // Show welcome modal only if not signed in AND no API key
+  // Wait for Clerk to finish loading before deciding
+  useEffect(() => {
+    if (!isLoaded) {
+      // Still checking auth state, don't show anything yet
+      setShowWelcome(false);
+      return;
+    }
+
+    // Auth state is loaded, now decide
+    if (!isSignedIn && !apiKey) {
+      setShowWelcome(true);
+    } else {
+      setShowWelcome(false);
+    }
+  }, [isSignedIn, apiKey, isLoaded]);
 
   // Detect mobile on mount and resize
   useEffect(() => {
@@ -114,16 +192,50 @@ export default function App() {
     saveToStorage(STORAGE_KEYS.HISTORY, history);
   }, [history]);
 
-  const handleAddTask = useCallback((task: Task) => {
-    setTasks(prev => [...prev, task]);
-    // Clear previous plan if tasks change to encourage regeneration
-    if (plan) setPlan(null); 
-  }, [plan]);
+  const handleAddTask = useCallback(async (task: Task) => {
+    // Keep existing plan - only clear when generating new one
+    
+    // If signed in, add to Convex (will auto-update via convexTasks)
+    if (isSignedIn && user) {
+      try {
+        await addTaskMutation({
+          userId: user.id,
+          title: task.title,
+          duration: task.duration,
+          priority: task.priority,
+          deadline: task.deadline,
+          fixedTime: task.fixedTime,
+        });
+        // Don't setTasks here - let convexTasks update do it
+      } catch (error) {
+        console.error('Failed to sync task to Convex:', error);
+        // Fallback to local if sync fails
+        setTasks(prev => [...prev, task]);
+      }
+    } else {
+      // Not signed in - use local storage only
+      setTasks(prev => [...prev, task]);
+    }
+  }, [plan, isSignedIn, user, addTaskMutation]);
 
-  const handleRemoveTask = useCallback((id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id));
-    if (plan) setPlan(null);
-  }, [plan]);
+  const handleRemoveTask = useCallback(async (id: string) => {
+    // Keep existing plan - only clear when generating new one
+    
+    // If signed in, remove from Convex (will auto-update via convexTasks)
+    if (isSignedIn && user) {
+      try {
+        await removeTaskMutation({ id: id as any });
+        // Don't setTasks here - let convexTasks update do it
+      } catch (error) {
+        console.error('Failed to remove task from Convex:', error);
+        // Fallback to local if sync fails
+        setTasks(prev => prev.filter(t => t.id !== id));
+      }
+    } else {
+      // Not signed in - use local storage only
+      setTasks(prev => prev.filter(t => t.id !== id));
+    }
+  }, [plan, isSignedIn, user, removeTaskMutation]);
 
   const handleGeneratePlan = async () => {
     if (tasks.length === 0) return;
@@ -142,6 +254,21 @@ export default function App() {
       const { plan: generatedPlan, tokenUsage } = await generateSchedule(tasks, language);
       setPlan(generatedPlan);
 
+      // Check if there's enough time in the day
+      const totalTaskMinutes = tasks.reduce((acc, t) => acc + t.duration, 0);
+      const now = new Date();
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      const availableMinutes = Math.floor((endOfDay.getTime() - now.getTime()) / (1000 * 60));
+
+      if (totalTaskMinutes > availableMinutes && availableMinutes > 0) {
+        setTimeWarningData({
+          needed: totalTaskMinutes,
+          available: availableMinutes,
+        });
+        setShowTimeWarning(true);
+      }
+
       // Export tasks to text for re-import
       const tasksText = exportTasksToText(tasks);
 
@@ -157,6 +284,30 @@ export default function App() {
       };
       
       setHistory(prev => [historyEntry, ...prev]); // Add to beginning
+      
+      // Sync plan and history to Convex if signed in
+      if (isSignedIn && user) {
+        try {
+          await savePlanMutation({
+            userId: user.id,
+            morning: generatedPlan.morning,
+            afternoon: generatedPlan.afternoon,
+            evening: generatedPlan.evening,
+            tips: generatedPlan.tips,
+          });
+          
+          await addHistoryMutation({
+            userId: user.id,
+            plan: generatedPlan,
+            tasksCount: tasks.length,
+            tokenUsage,
+            modelUsed: 'gemini-2.5-flash',
+            tasksText,
+          });
+        } catch (error) {
+          console.error('Failed to sync plan/history to Convex:', error);
+        }
+      }
     } catch (err: any) {
       const errorMessage = err.message || "";
       if (errorMessage.includes("API Key")) {
@@ -258,9 +409,33 @@ export default function App() {
     return Math.round(((task.duration - remaining) / task.duration) * 100);
   };
 
-  const handleBulkImport = (importedTasks: Task[]) => {
-    setTasks(prev => [...prev, ...importedTasks]);
-    if (plan) setPlan(null); // Clear plan to encourage regeneration
+  const handleBulkImport = async (importedTasks: Task[]) => {
+    // Keep existing plan
+    setIsBulkImportOpen(false); // Close modal
+    
+    // If signed in, sync each task to Convex
+    if (isSignedIn && user) {
+      try {
+        for (const task of importedTasks) {
+          await addTaskMutation({
+            userId: user.id,
+            title: task.title,
+            duration: task.duration,
+            priority: task.priority,
+            deadline: task.deadline,
+            fixedTime: task.fixedTime,
+          });
+        }
+        // convexTasks will auto-update
+      } catch (error) {
+        console.error('Failed to bulk import to Convex:', error);
+        // Fallback to local
+        setTasks(prev => [...prev, ...importedTasks]);
+      }
+    } else {
+      // Not signed in - use local storage only
+      setTasks(prev => [...prev, ...importedTasks]);
+    }
   };
 
   // Export tasks to text format (compatible with bulk import)
@@ -304,12 +479,26 @@ export default function App() {
     }
   };
 
-  const handleClearAllTasks = () => {
+  const handleClearAllTasks = async () => {
     if (tasks.length === 0) return;
     
     if (window.confirm(t.taskList.confirmClear)) {
-      setTasks([]);
-      if (plan) setPlan(null);
+      // Keep plan - user might want to see old plan
+      
+      // If signed in, clear in Convex (will auto-update via convexTasks)
+      if (isSignedIn && user) {
+        try {
+          await clearAllTasksMutation({ userId: user.id });
+          // Don't setTasks here - let convexTasks update do it
+        } catch (error) {
+          console.error('Failed to clear tasks in Convex:', error);
+          // Fallback to local if sync fails
+          setTasks([]);
+        }
+      } else {
+        // Not signed in - use local storage only
+        setTasks([]);
+      }
     }
   };
 
@@ -325,6 +514,8 @@ export default function App() {
             <h1 className="text-base sm:text-xl font-bold text-slate-800 tracking-tight">{t.header.title}</h1>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
+            <AuthButton />
+            
             <LanguageSwitcher />
             
             <button
@@ -457,6 +648,71 @@ export default function App() {
             {error && (
               <div className="p-4 bg-rose-50 text-rose-600 text-sm rounded-xl border border-rose-100">
                 {error}
+              </div>
+            )}
+
+            {/* Time Warning */}
+            {showTimeWarning && timeWarningData && (
+              <div className="p-4 sm:p-5 bg-amber-50 border-2 border-amber-300 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
+                    <AlertCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-amber-900 mb-2 text-sm sm:text-base">
+                      {t.generate.timeWarning.title}
+                    </h4>
+                    <p className="text-amber-800 text-xs sm:text-sm mb-3">
+                      {t.generate.timeWarning.message}
+                    </p>
+                    
+                    <div className="grid grid-cols-2 gap-3 mb-3 text-xs sm:text-sm">
+                      <div className="bg-white/80 rounded-lg p-3 border border-amber-200">
+                        <div className="text-amber-700 font-medium mb-1">{t.generate.timeWarning.needed}</div>
+                        <div className="text-amber-900 font-bold">
+                          {Math.floor(timeWarningData.needed / 60)}{t.generate.timeWarning.hours} {timeWarningData.needed % 60}{t.generate.timeWarning.minutes}
+                        </div>
+                      </div>
+                      <div className="bg-white/80 rounded-lg p-3 border border-amber-200">
+                        <div className="text-amber-700 font-medium mb-1">{t.generate.timeWarning.available}</div>
+                        <div className="text-amber-900 font-bold">
+                          {Math.floor(timeWarningData.available / 60)}{t.generate.timeWarning.hours} {timeWarningData.available % 60}{t.generate.timeWarning.minutes}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/80 rounded-lg p-3 border border-amber-200">
+                      <div className="text-amber-800 font-semibold text-xs sm:text-sm mb-2">
+                        {t.generate.timeWarning.suggestions}
+                      </div>
+                      <ul className="space-y-1 text-xs text-amber-700">
+                        <li className="flex items-start gap-2">
+                          <span className="text-amber-500 mt-0.5">•</span>
+                          <span>{t.generate.timeWarning.suggestion1}</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-amber-500 mt-0.5">•</span>
+                          <span>{t.generate.timeWarning.suggestion2}</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-amber-500 mt-0.5">•</span>
+                          <span>{t.generate.timeWarning.suggestion3}</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-amber-500 mt-0.5">•</span>
+                          <span>{t.generate.timeWarning.suggestion4}</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <button
+                      onClick={() => setShowTimeWarning(false)}
+                      className="mt-3 text-xs sm:text-sm text-amber-700 hover:text-amber-900 font-medium"
+                    >
+                      Đã hiểu
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>

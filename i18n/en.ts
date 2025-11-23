@@ -251,6 +251,8 @@ export const en: Translations = {
     req8: 'Response language: English.',
     req9: 'Include time for daily routines: breakfast, lunch, dinner, shower, sleep, etc.',
     req10: 'Design based on pomodoro technique. Add ~5 minute breaks between work sessions.',
+    req11: 'Start work at the current time.',
+    req12: 'Can edit the task name if it is misspelled or in a different language',
   },
 };
 

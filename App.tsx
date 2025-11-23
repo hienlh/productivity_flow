@@ -367,15 +367,15 @@ export default function App() {
           <div className="lg:col-span-4 space-y-4 sm:space-y-6 py-4 sm:py-8 pb-6">
             <div className="bg-indigo-900 text-white p-6 rounded-2xl shadow-xl shadow-indigo-900/20 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
-              <h2 className="text-2xl font-bold mb-2">Lập kế hoạch</h2>
+              <h2 className="text-2xl font-bold mb-2">{t.planOverview.title}</h2>
               <p className="text-indigo-200 text-sm mb-6">
-                Nhập danh sách việc cần làm, AI sẽ giúp bạn tối ưu hóa thời gian trong ngày.
+                {t.planOverview.subtitle}
               </p>
               
               <div className="flex items-center justify-between text-xs font-mono bg-indigo-800/50 p-3 rounded-lg border border-indigo-700/50">
-                <span>{tasks.length} Tasks</span>
+                <span>{tasks.length} {t.planOverview.tasks}</span>
                 <span className="flex items-center gap-1">
-                  {tasks.reduce((acc, t) => acc + t.duration, 0)} phút tổng cộng
+                  {tasks.reduce((acc, t) => acc + t.duration, 0)} {t.planOverview.totalMinutes}
                 </span>
               </div>
             </div>
@@ -388,13 +388,13 @@ export default function App() {
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-dashed border-indigo-200 text-indigo-600 font-medium rounded-xl hover:bg-indigo-50 hover:border-indigo-300 transition-all group"
             >
               <Upload className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span>Import hàng loạt từ văn bản</span>
+              <span>{t.generate.importButton}</span>
             </button>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                   <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-semibold text-slate-700">Danh sách chờ</h3>
+                    <h3 className="font-semibold text-slate-700">{t.taskList.title}</h3>
                     {tasks.length > 0 && (
                       <span className="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{tasks.length}</span>
                     )}
@@ -408,12 +408,12 @@ export default function App() {
                         {isCopied ? (
                           <>
                             <Check className="w-3.5 h-3.5" />
-                            <span>Đã copy!</span>
+                            <span>{t.taskList.copied}</span>
                           </>
                         ) : (
                           <>
                             <Copy className="w-3.5 h-3.5" />
-                            <span>Copy text</span>
+                            <span>{t.taskList.copyText}</span>
                           </>
                         )}
                       </button>
@@ -422,7 +422,7 @@ export default function App() {
                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                        <span>Xóa tất cả</span>
+                        <span>{t.taskList.clearAll}</span>
                       </button>
                     </div>
                   )}
@@ -444,12 +444,12 @@ export default function App() {
               {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Đang phân tích...
+                  {t.generate.loading}
                 </>
               ) : (
                 <>
                   <BrainCircuit className="w-6 h-6" />
-                  Tạo Lịch Trình
+                  {t.generate.button}
                 </>
               )}
             </button>
@@ -468,9 +468,9 @@ export default function App() {
                 <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
                   <CalendarClock className="w-10 h-10 text-indigo-300" />
                 </div>
-                <h3 className="text-xl font-semibold text-slate-700 mb-2">Sẵn sàng lên kế hoạch</h3>
+                <h3 className="text-xl font-semibold text-slate-700 mb-2">{t.planDisplay.emptyTitle}</h3>
                 <p className="text-slate-500 max-w-md">
-                  Thêm các công việc của bạn ở bên trái và nhấn "Tạo Lịch Trình". AI sẽ sắp xếp thời gian biểu tối ưu nhất cho bạn.
+                  {t.planDisplay.emptyDesc}
                 </p>
               </div>
             ) : (

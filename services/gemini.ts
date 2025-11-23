@@ -107,6 +107,8 @@ export const generateSchedule = async (tasks: Task[], language: Language = 'vi')
     8. ${t.req8}
     9. ${t.req9}
     10. ${t.req10}
+    11. ${t.req11}
+    12. ${t.req12}
   `;
 
   try {

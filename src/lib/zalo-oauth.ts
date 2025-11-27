@@ -39,8 +39,7 @@ export function useZaloSignIn() {
 
       try {
         await signIn.authenticateWithRedirect({
-          strategy: 'oauth_custom',
-          identifier: 'oauth_zalo', // This should match the provider ID in Clerk
+          strategy: 'oauth_custom_zalo' as any, // Custom OAuth provider - matches Clerk config
           redirectUrl: options?.redirectUrl || '/sso-callback',
           redirectUrlComplete: options?.redirectUrlComplete || '/dashboard',
         });
@@ -63,7 +62,7 @@ export function useZaloSignIn() {
  * These values should match your Clerk configuration
  */
 export const ZALO_OAUTH_CONFIG = {
-  providerId: 'oauth_zalo', // Custom provider ID in Clerk
+  providerId: 'oauth_custom_zalo', // Custom provider ID in Clerk (matches the Key in Clerk Dashboard)
   providerName: 'Zalo',
   scopes: ['openid', 'profile'], // Optional, Zalo doesn't strictly use these
 } as const;

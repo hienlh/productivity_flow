@@ -32,12 +32,27 @@ export async function POST(request: NextRequest) {
       redirect_uri,
     } = params;
 
+    // Use actual Zalo credentials from environment variables
+    const zaloAppId = process.env.ZALO_APP_ID;
+    const zaloSecretKey = process.env.ZALO_SECRET_KEY;
+
+    // Validate environment configuration
+    if (!zaloAppId || !zaloSecretKey) {
+      return NextResponse.json(
+        { 
+          error: 'server_error',
+          error_description: 'ZALO_APP_ID or ZALO_SECRET_KEY not configured in environment variables' 
+        },
+        { status: 500 }
+      );
+    }
+
     // Validate required parameters
-    if (!client_id || !client_secret || !code) {
+    if (!code) {
       return NextResponse.json(
         { 
           error: 'invalid_request',
-          error_description: 'Missing required parameters: client_id, client_secret, or code' 
+          error_description: 'Missing required parameter: code' 
         },
         { status: 400 }
       );
@@ -59,8 +74,8 @@ export async function POST(request: NextRequest) {
 
     // Exchange authorization code for access token with Zalo
     const tokenParams = new URLSearchParams({
-      app_id: client_id,           // Map client_id to app_id
-      secret_key: client_secret,   // Map client_secret to secret_key
+      app_id: zaloAppId,           // Use Zalo App ID from env
+      secret_key: zaloSecretKey,   // Use Zalo Secret Key from env
       code: code,
       grant_type: grant_type || 'authorization_code',
       code_verifier: codeVerifier, // Required for PKCE
@@ -126,11 +141,25 @@ export async function PUT(request: NextRequest) {
       grant_type,
     } = params;
 
-    if (!client_id || !client_secret || !refresh_token) {
+    // Use actual Zalo credentials from environment variables
+    const zaloAppId = process.env.ZALO_APP_ID;
+    const zaloSecretKey = process.env.ZALO_SECRET_KEY;
+
+    if (!zaloAppId || !zaloSecretKey) {
+      return NextResponse.json(
+        { 
+          error: 'server_error',
+          error_description: 'ZALO_APP_ID or ZALO_SECRET_KEY not configured in environment variables' 
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!refresh_token) {
       return NextResponse.json(
         { 
           error: 'invalid_request',
-          error_description: 'Missing required parameters for token refresh' 
+          error_description: 'Missing required parameter: refresh_token' 
         },
         { status: 400 }
       );
@@ -138,8 +167,8 @@ export async function PUT(request: NextRequest) {
 
     // Refresh access token with Zalo
     const refreshParams = new URLSearchParams({
-      app_id: client_id,           // Map client_id to app_id
-      secret_key: client_secret,   // Map client_secret to secret_key
+      app_id: zaloAppId,           // Use Zalo App ID from env
+      secret_key: zaloSecretKey,   // Use Zalo Secret Key from env
       refresh_token: refresh_token,
       grant_type: grant_type || 'refresh_token',
     });

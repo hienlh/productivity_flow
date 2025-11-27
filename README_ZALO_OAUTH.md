@@ -54,11 +54,18 @@ ZALO_SECRET_KEY=your_secret_key
 
 Trong Clerk → Social Connections → Custom OAuth:
 
+- **Name**: `Zalo`
+- **Key**: `zalo` (hoặc bất kỳ, không quan trọng vì API sẽ dùng env vars)
 - **Authorization URL**: `http://localhost:3000/api/auth/zalo/authorize`
 - **Token URL**: `http://localhost:3000/api/auth/zalo/token`
 - **User Info URL**: `http://localhost:3000/api/auth/zalo/userinfo`
-- **Client ID**: `2929451347492988582`
-- **Client Secret**: [Your Zalo Secret Key]
+- **Client ID**: `dummy` (giá trị này không được sử dụng, API sẽ dùng ZALO_APP_ID từ env)
+- **Client Secret**: `dummy` (giá trị này không được sử dụng, API sẽ dùng ZALO_SECRET_KEY từ env)
+- **Enable for sign-up and sign-in**: ✅ Enabled
+
+⚠️ **Quan trọng**: Clerk's Client ID và Client Secret là "dummy values" vì:
+- API proxy sẽ tự động sử dụng `ZALO_APP_ID` và `ZALO_SECRET_KEY` từ environment variables
+- Điều này đảm bảo bảo mật và dễ quản lý credentials
 
 ### 3. Update Zalo Developer Portal
 

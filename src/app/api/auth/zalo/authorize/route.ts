@@ -12,14 +12,24 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     
     // Get parameters from Clerk's OAuth request
-    const clientId = searchParams.get('client_id'); // This will be mapped to app_id
+    const clientId = searchParams.get('client_id'); // Clerk sends this, but we use env var for Zalo
     const redirectUri = searchParams.get('redirect_uri');
     const state = searchParams.get('state');
     const scope = searchParams.get('scope');
     
-    if (!clientId || !redirectUri) {
+    // Use actual Zalo App ID from environment variable
+    const zaloAppId = process.env.ZALO_APP_ID;
+    
+    if (!zaloAppId) {
       return NextResponse.json(
-        { error: 'Missing required parameters: client_id or redirect_uri' },
+        { error: 'ZALO_APP_ID not configured in environment variables' },
+        { status: 500 }
+      );
+    }
+    
+    if (!redirectUri) {
+      return NextResponse.json(
+        { error: 'Missing required parameter: redirect_uri' },
         { status: 400 }
       );
     }
@@ -58,15 +68,23 @@ export async function GET(request: NextRequest) {
     }
 
     // Build Zalo authorization URL
+    const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/zalo/callback`;
     const zaloAuthUrl = new URL('https://oauth.zaloapp.com/v4/permission');
-    zaloAuthUrl.searchParams.set('app_id', clientId); // Map client_id to app_id
-    zaloAuthUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/zalo/callback`);
+    zaloAuthUrl.searchParams.set('app_id', zaloAppId); // Use Zalo App ID from env
+    zaloAuthUrl.searchParams.set('redirect_uri', callbackUrl);
     zaloAuthUrl.searchParams.set('code_challenge', codeChallenge);
+    zaloAuthUrl.searchParams.set('code_challenge_method', 'S256'); // Required by Zalo PKCE
     
     // Pass through state to maintain CSRF protection
     if (state) {
       zaloAuthUrl.searchParams.set('state', state);
     }
+
+    // Log for debugging
+    console.log('🔵 Zalo OAuth Authorization:');
+    console.log('  - App ID:', zaloAppId);
+    console.log('  - Callback URL:', callbackUrl);
+    console.log('  - Full Zalo Auth URL:', zaloAuthUrl.toString());
 
     // Redirect user to Zalo for authorization
     return NextResponse.redirect(zaloAuthUrl.toString());

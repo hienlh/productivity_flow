@@ -74,15 +74,10 @@ export default function HomePage() {
   const clearHistoryMutation = useMutation(api.history.clearAll);
   
   // Local state (for offline mode or not signed in)
-  const [tasks, setTasks] = useState<Task[]>(() => 
-    loadFromStorage(STORAGE_KEYS.TASKS, [])
-  );
-  const [plan, setPlan] = useState<DayPlan | null>(() => 
-    loadFromStorage(STORAGE_KEYS.PLAN, null)
-  );
-  const [history, setHistory] = useState<ScheduleHistory[]>(() => 
-    loadFromStorage(STORAGE_KEYS.HISTORY, [])
-  );
+  // Fix hydration: Initialize with default values, load from localStorage after mount
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [plan, setPlan] = useState<DayPlan | null>(null);
+  const [history, setHistory] = useState<ScheduleHistory[]>([]);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -98,6 +93,20 @@ export default function HomePage() {
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKeySetup, setShowApiKeySetup] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+
+  // Load from localStorage on mount (client-side only) - FIX HYDRATION
+  useEffect(() => {
+    // Only run on client after mount
+    if (!isSignedIn) {
+      const storedTasks = loadFromStorage(STORAGE_KEYS.TASKS, []);
+      const storedPlan = loadFromStorage(STORAGE_KEYS.PLAN, null);
+      const storedHistory = loadFromStorage(STORAGE_KEYS.HISTORY, []);
+      
+      if (storedTasks.length > 0) setTasks(storedTasks);
+      if (storedPlan) setPlan(storedPlan);
+      if (storedHistory.length > 0) setHistory(storedHistory);
+    }
+  }, [isSignedIn]); // Only run when auth state changes
 
   // Sync with Convex when signed in
   useEffect(() => {

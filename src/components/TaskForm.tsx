@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState } from 'react';
-import { Task, Priority } from '../types';
+import { Task, Priority } from '../lib/types';
 import { PlusCircle, Clock, AlertCircle, Pin } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 

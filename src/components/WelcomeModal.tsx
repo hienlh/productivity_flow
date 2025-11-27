@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Sparkles, Brain, Calendar, Zap, ArrowRight, CheckCircle, Languages } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -169,4 +171,3 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
     </div>
   );
 };
-

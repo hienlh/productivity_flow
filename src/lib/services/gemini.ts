@@ -1,8 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Task, DayPlan, Priority, TokenUsage } from "../types";
-import { vi } from '../i18n/vi';
-import { en } from '../i18n/en';
-import type { Language } from '../contexts/LanguageContext';
+import { vi } from '../../i18n/vi';
+import { en } from '../../i18n/en';
+import type { Language } from '../../contexts/LanguageContext';
 
 // Gemini 2.5 Flash Pricing (as of 2024)
 // Source: https://ai.google.dev/pricing

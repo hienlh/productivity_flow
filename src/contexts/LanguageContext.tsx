@@ -1,9 +1,11 @@
+'use client';
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { vi, Translations } from '../i18n/vi';
 import { en } from '../i18n/en';
-import { useUser } from '@clerk/clerk-react';
+import { useUser } from '@clerk/nextjs';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '../convex/_generated/api';
+import { api } from '../../convex/_generated/api';
 
 export type Language = 'vi' | 'en';
 
@@ -101,4 +103,3 @@ export const useLanguage = () => {
   }
   return context;
 };
-

@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState } from 'react';
-import { ScheduleItem } from '../types';
+import { ScheduleItem } from '../lib/types';
 import { Zap, X, CheckCircle, Clock } from 'lucide-react';
 
 interface FloatingActionButtonProps {
@@ -134,4 +136,3 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     </>
   );
 };
-

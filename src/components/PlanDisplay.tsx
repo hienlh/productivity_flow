@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
-import { DayPlan, ScheduleItem, ScheduleType } from '../types';
+import { DayPlan, ScheduleItem, ScheduleType } from '../lib/types';
 import { Sun, Moon, Coffee, Lightbulb, CheckCircle2, Briefcase, ArrowRight, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
 
 interface PlanDisplayProps {

@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState } from 'react';
-import { ScheduleHistory } from '../types';
+import { ScheduleHistory } from '../lib/types';
 import { X, History, TrendingUp, DollarSign, Zap, Calendar, Trash2, Copy, Check, FileText } from 'lucide-react';
 
 interface HistoryModalProps {
@@ -218,7 +220,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
             )}
           </div>
           <div className="text-xs text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-100">
-            📋 <strong>Mẹo:</strong> Click "Copy tasks" để sao chép danh sách, sau đó dùng "Import hàng loạt" để tái sử dụng!
+            📋 <strong>Mẹo:</strong> Click &ldquo;Copy tasks&rdquo; để sao chép danh sách, sau đó dùng &ldquo;Import hàng loạt&rdquo; để tái sử dụng!
           </div>
         </div>
       </div>

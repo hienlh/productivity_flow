@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Languages } from 'lucide-react';
 import { useLanguage, Language } from '../contexts/LanguageContext';
@@ -21,4 +23,3 @@ export const LanguageSwitcher: React.FC = () => {
     </button>
   );
 };
-

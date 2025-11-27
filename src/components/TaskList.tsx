@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import { Task, Priority } from '../types';
+import { Task, Priority } from '../lib/types';
 import { Trash2, Clock, Calendar, Pin } from 'lucide-react';
 
 interface TaskListProps {

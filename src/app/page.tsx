@@ -1,21 +1,23 @@
+'use client';
+
 import React, { useState, useCallback, useEffect } from 'react';
-import { Task, DayPlan, ScheduleHistory, Priority } from './types';
-import { TaskForm } from './components/TaskForm';
-import { TaskList } from './components/TaskList';
-import { PlanDisplay } from './components/PlanDisplay';
-import { HistoryModal } from './components/HistoryModal';
-import { BulkImportModal } from './components/BulkImportModal';
-import { DashboardView } from './components/DashboardView';
-import { FloatingActionButton } from './components/FloatingActionButton';
-import { ApiKeySetup } from './components/ApiKeySetup';
-import { WelcomeModal } from './components/WelcomeModal';
-import { LanguageSwitcher } from './components/LanguageSwitcher';
-import { AuthButton } from './components/AuthButton';
-import { generateSchedule } from './services/gemini';
-import { useLanguage } from './contexts/LanguageContext';
-import { useUser } from '@clerk/clerk-react';
+import { Task, DayPlan, ScheduleHistory, Priority } from '@/lib/types';
+import { TaskForm } from '@/components/TaskForm';
+import { TaskList } from '@/components/TaskList';
+import { PlanDisplay } from '@/components/PlanDisplay';
+import { HistoryModal } from '@/components/HistoryModal';
+import { BulkImportModal } from '@/components/BulkImportModal';
+import { DashboardView } from '@/components/DashboardView';
+import { FloatingActionButton } from '@/components/FloatingActionButton';
+import { ApiKeySetup } from '@/components/ApiKeySetup';
+import { WelcomeModal } from '@/components/WelcomeModal';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { AuthButton } from '@/components/AuthButton';
+import { generateSchedule } from '@/lib/services/gemini';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useUser } from '@clerk/nextjs';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from './convex/_generated/api';
+import { api } from '../../convex/_generated/api';
 import { Sparkles, BrainCircuit, CalendarClock, LayoutDashboard, History, Upload, Copy, Trash2, Check, Edit3, Save, X, Navigation, List, Settings, Languages, AlertCircle } from 'lucide-react';
 
 // LocalStorage keys
@@ -27,6 +29,11 @@ const STORAGE_KEYS = {
 
 // Helper functions for localStorage
 const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
+  // Check if we're in the browser
+  if (typeof window === 'undefined') {
+    return defaultValue;
+  }
+  
   try {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : defaultValue;
@@ -37,6 +44,11 @@ const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
 };
 
 const saveToStorage = <T,>(key: string, value: T): void => {
+  // Check if we're in the browser
+  if (typeof window === 'undefined') {
+    return;
+  }
+  
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
@@ -44,7 +56,7 @@ const saveToStorage = <T,>(key: string, value: T): void => {
   }
 };
 
-export default function App() {
+export default function HomePage() {
   const { t, language } = useLanguage();
   const { user, isSignedIn, isLoaded } = useUser();
   
@@ -216,7 +228,7 @@ export default function App() {
       // Not signed in - use local storage only
       setTasks(prev => [...prev, task]);
     }
-  }, [plan, isSignedIn, user, addTaskMutation]);
+  }, [isSignedIn, user, addTaskMutation]);
 
   const handleRemoveTask = useCallback(async (id: string) => {
     // Keep existing plan - only clear when generating new one
@@ -235,7 +247,7 @@ export default function App() {
       // Not signed in - use local storage only
       setTasks(prev => prev.filter(t => t.id !== id));
     }
-  }, [plan, isSignedIn, user, removeTaskMutation]);
+  }, [isSignedIn, user, removeTaskMutation]);
 
   const handleGeneratePlan = async () => {
     if (tasks.length === 0) return;

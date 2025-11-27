@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react';
+import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs';
 import { Users, LogIn } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -37,4 +39,3 @@ export const AuthButton: React.FC = () => {
     </div>
   );
 };
-

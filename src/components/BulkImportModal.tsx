@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState } from 'react';
-import { Task, Priority } from '../types';
+import { Task, Priority } from '../lib/types';
 import { X, Upload, FileText, AlertCircle } from 'lucide-react';
 
 interface BulkImportModalProps {

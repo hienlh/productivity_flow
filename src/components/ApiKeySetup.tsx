@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Key, X, ExternalLink, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
@@ -94,7 +96,7 @@ export const ApiKeySetup: React.FC<ApiKeySetupProps> = ({
                     <ExternalLink className="w-3 h-3" />
                   </a></li>
                   <li>Đăng nhập với Google account</li>
-                  <li>Click "Create API key"</li>
+                  <li>Click &ldquo;Create API key&rdquo;</li>
                   <li>Copy API key và paste vào ô bên dưới</li>
                 </ol>
               </div>
@@ -204,4 +206,3 @@ export const ApiKeySetup: React.FC<ApiKeySetupProps> = ({
     </div>
   );
 };
-

@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { DayPlan, ScheduleItem, ScheduleType } from '../types';
+import { DayPlan, ScheduleItem, ScheduleType } from '../lib/types';
 import { Clock, ChevronRight, CheckCircle, Circle, Zap, Coffee, Calendar } from 'lucide-react';
 
 interface DashboardViewProps {

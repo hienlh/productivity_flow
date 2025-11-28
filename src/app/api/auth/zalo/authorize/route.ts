@@ -34,18 +34,37 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Generate PKCE code_verifier and code_challenge (required by Zalo)
-    const codeVerifier = generateCodeVerifier();
-    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    // Check if Clerk provided PKCE parameters
+    const providedCodeChallenge = searchParams.get('code_challenge');
+    const providedCodeChallengeMethod = searchParams.get('code_challenge_method');
     
-    // Store code_verifier in cookie for later use in token exchange
-    // Also store the original redirect_uri and state from Clerk
+    let codeChallenge = providedCodeChallenge;
+    
+    // If Clerk didn't provide PKCE, generate our own (fallback)
+    if (!codeChallenge) {
+      const codeVerifier = generateCodeVerifier();
+      codeChallenge = await generateCodeChallenge(codeVerifier);
+      
+      // Store code_verifier in cookie ONLY if we generated it
+      const cookieStore = await cookies();
+      cookieStore.set('zalo_code_verifier', codeVerifier, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 600, // 10 minutes
+        path: '/',
+      });
+    } else {
+      console.log('🔵 Using provided PKCE code_challenge from Clerk');
+    }
+    
+    // Store other state cookies
     const cookieStore = await cookies();
-    cookieStore.set('zalo_code_verifier', codeVerifier, {
+    cookieStore.set('zalo_clerk_redirect_uri', redirectUri, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 600, // 10 minutes
+      maxAge: 600,
       path: '/',
     });
     

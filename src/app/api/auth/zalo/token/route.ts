@@ -67,9 +67,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get code_verifier from cookie (stored during authorization)
+    // Get code_verifier
+    // Priority 1: From request body (if Clerk is doing PKCE)
+    // Priority 2: From cookie (if we handled PKCE)
+    let codeVerifier: string | undefined = params.code_verifier;
+    
     const cookieStore = await cookies();
-    const codeVerifier = cookieStore.get('zalo_code_verifier')?.value;
+    
+    if (!codeVerifier) {
+      codeVerifier = cookieStore.get('zalo_code_verifier')?.value;
+      console.log('  - Using code_verifier from cookie');
+    } else {
+      console.log('  - Using code_verifier from request body');
+    }
     
     if (!codeVerifier) {
       return NextResponse.json(

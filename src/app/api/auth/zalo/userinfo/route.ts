@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from 'next/server';
  * This endpoint is called by Clerk to get user information after authentication.
  */
 export async function GET(request: NextRequest) {
+  console.log('👤 User Info endpoint called');
+  
   try {
     // Get access token from Authorization header
     const authHeader = request.headers.get('authorization');
@@ -46,15 +48,20 @@ export async function GET(request: NextRequest) {
 
     // Transform Zalo user data to standard OAuth/OIDC format (compatible with Clerk)
     const standardUserInfo = {
+      id: userData.id,                     // Clerk expects 'id' based on your mapping
       sub: userData.id,                    // Standard OIDC subject identifier
       name: userData.name,
-      given_name: userData.name,
+      given_name: userData.name,           // Zalo doesn't split names, so use full name
+      family_name: '',                     // Placeholder
       picture: userData.picture?.data?.url,
+      avatar_url: userData.picture?.data?.url, // Alias for picture
       // Add any additional fields that Clerk might expect
-      email: userData.email,               // If available
-      email_verified: false,               // Zalo may not provide this
-      locale: 'vi_VN',
+      email: userData.email,               // If available (requires extra permission)
+      email_verified: false,
+      locale: 'vi',
     };
+
+    console.log('👤 Zalo User Info Response:', standardUserInfo);
 
     return NextResponse.json(standardUserInfo);
     

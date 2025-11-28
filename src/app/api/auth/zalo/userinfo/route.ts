@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getProxyOptions } from '@/lib/proxy';
 
 /**
  * Zalo User Info Endpoint
@@ -25,11 +26,15 @@ export async function GET(request: NextRequest) {
     const accessToken = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Fetch user info from Zalo Graph API
+    // Use proxy if configured to bypass IP restrictions
+    const proxyOptions = getProxyOptions();
+    
     const userInfoResponse = await fetch('https://graph.zalo.me/v2.0/me?fields=id,name,picture', {
       method: 'GET',
       headers: {
         'access_token': accessToken,
       },
+      ...proxyOptions, // Inject dispatcher/agent here
     });
 
     const userData = await userInfoResponse.json();

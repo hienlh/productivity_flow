@@ -7,6 +7,11 @@ import { cookies } from 'next/headers';
  * Translates between Clerk's OAuth token request and Zalo's API.
  */
 export async function POST(request: NextRequest) {
+  console.log('🔵 Token Exchange endpoint called');
+  console.log('  - Method:', request.method);
+  console.log('  - Content-Type:', request.headers.get('content-type'));
+  console.log('  - URL:', request.url);
+  
   try {
     // Parse request body (could be JSON or form-urlencoded)
     const contentType = request.headers.get('content-type') || '';
@@ -23,6 +28,10 @@ export async function POST(request: NextRequest) {
       // Try to parse as JSON by default
       params = await request.json();
     }
+    
+    console.log('  - Parsed params:', Object.keys(params));
+    console.log('  - Has code:', !!params.code);
+    console.log('  - Has client_id:', !!params.client_id);
     
     const {
       client_id,
@@ -75,7 +84,6 @@ export async function POST(request: NextRequest) {
     // Exchange authorization code for access token with Zalo
     const tokenParams = new URLSearchParams({
       app_id: zaloAppId,           // Use Zalo App ID from env
-      secret_key: zaloSecretKey,   // Use Zalo Secret Key from env
       code: code,
       grant_type: grant_type || 'authorization_code',
       code_verifier: codeVerifier, // Required for PKCE
@@ -85,15 +93,25 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'secret_key': zaloSecretKey,  // Zalo requires secret_key in header, not body
       },
       body: tokenParams.toString(),
     });
 
     const tokenData = await tokenResponse.json();
 
+    console.log('🔑 Zalo Token Exchange:', {
+      status: tokenResponse.status,
+      ok: tokenResponse.ok,
+      hasAccessToken: !!tokenData.access_token,
+      hasRefreshToken: !!tokenData.refresh_token,
+      error: tokenData.error,
+      errorCode: tokenData.error_code,
+    });
+
     // Check for errors from Zalo
     if (!tokenResponse.ok || tokenData.error) {
-      console.error('Zalo token exchange error:', tokenData);
+      console.error('❌ Zalo token exchange failed:', tokenData);
       return NextResponse.json(
         {
           error: tokenData.error || 'token_exchange_failed',
@@ -168,7 +186,6 @@ export async function PUT(request: NextRequest) {
     // Refresh access token with Zalo
     const refreshParams = new URLSearchParams({
       app_id: zaloAppId,           // Use Zalo App ID from env
-      secret_key: zaloSecretKey,   // Use Zalo Secret Key from env
       refresh_token: refresh_token,
       grant_type: grant_type || 'refresh_token',
     });
@@ -177,6 +194,7 @@ export async function PUT(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'secret_key': zaloSecretKey,  // Zalo requires secret_key in header, not body
       },
       body: refreshParams.toString(),
     });

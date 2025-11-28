@@ -15,6 +15,13 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');
     
+    console.log('📥 Zalo Callback received:', {
+      hasCode: !!code,
+      hasState: !!state,
+      error: error,
+      errorDescription: errorDescription,
+    });
+    
     // Handle authorization errors
     if (error) {
       console.error('Zalo authorization error:', error, errorDescription);
@@ -56,6 +63,12 @@ export async function GET(request: NextRequest) {
     cookieStore.delete('zalo_clerk_redirect_uri');
     cookieStore.delete('zalo_clerk_state');
     // Note: Keep zalo_code_verifier for token exchange
+
+    console.log('🔄 Redirecting to Clerk:', {
+      url: redirectUrl.toString(),
+      hasCode: !!code,
+      hasState: !!state,
+    });
 
     // Redirect back to Clerk
     return NextResponse.redirect(redirectUrl.toString());

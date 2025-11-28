@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function TestZaloCallbackPage() {
+function CallbackContent() {
   const searchParams = useSearchParams();
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -222,3 +222,17 @@ export default function TestZaloCallbackPage() {
   );
 }
 
+export default function TestZaloCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500 p-8 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-xl p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-700 font-semibold">Đang tải...</p>
+        </div>
+      </div>
+    }>
+      <CallbackContent />
+    </Suspense>
+  );
+}
